@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPG File Uploader with Translation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.15);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .file-preview {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .file-icon {
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        .file-details {
+            text-align: left;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-weight: 600;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: 600;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(220, 53, 69, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .text-result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(40, 167, 69, 0.05);
+            border: 2px solid rgba(40, 167, 69, 0.2);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .text-result h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .extracted-text {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .text-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* New Translation Styles */
+        .translation-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(52, 144, 220, 0.05);
+            border: 2px solid rgba(52, 144, 220, 0.2);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .translation-result h3 {
+            color: #3490dc;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bengali-text {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-family: 'Kalpurush', 'SolaimanLipi', 'Mukti', Arial, sans-serif;
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .translation-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #666;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .language-tag {
+            background: #3490dc;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .translation-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-icon {
+            font-size: 1.2em;
+        }
+
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .upload-area {
+                padding: 40px 15px;
+            }
+
+            .translation-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .loading {
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 0.8em;
+            color: #666;
+            text-align: left;
+            display: none;
+        }
+
+        .processing-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toggle-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .toggle-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JPG File Uploader with Translation</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Drag and drop your JPG file here</div>
+            <div class="upload-subtext">or click to browse files</div>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".jpg,.jpeg" multiple>
+        
+        <button class="btn" onclick="document.getElementById('fileInput').click()">
+            Choose Files
+        </button>
+        
+        <button class="btn" onclick="clearFiles()" style="background: #6c757d;">
+            Clear All
+        </button>
+        
+        <button class="btn" onclick="processFiles()" style="background: #28a745;">
+            Process Files
+        </button>
+        
+        <button class="btn" onclick="downloadFile()" style="background: #17a2b8;">
+            Download First File
+        </button>
+        
+        <button class="btn" onclick="sendToPython()" style="background: #fd7e14;" id="sendToPythonBtn">
+            Extract & Translate
+        </button>
+        
+        <div class="processing-status" id="processingStatus">
+            <div class="spinner"></div>
+            Processing files, please wait...
+        </div>
+        
+        <div class="file-preview" id="filePreview"></div>
+        
+        <div class="success-message" id="successMessage">
+            ✅ File uploaded successfully!
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            ❌ Please select only JPG files.
+        </div>
+        
+        <div class="text-result" id="textResult">
+            <h3>📝 Extracted Text</h3>
+            <div class="text-info">
+                <span id="textMethod">Method: Loading...</span>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceFill"></div>
+                </div>
+                <span id="confidenceText">0%</span>
+                <button class="toggle-btn" onclick="toggleDebugInfo()">Debug</button>
+            </div>
+            <div class="extracted-text" id="extractedText">
+                Loading text extraction...
+            </div>
+            <button class="copy-btn" onclick="copyText('extractedText')">Copy Original Text</button>
+            <div class="debug-info" id="debugInfo">
+                Debug information will appear here...
+            </div>
+        </div>
+
+        <div class="translation-result" id="translationResult">
+            <h3>🌐 Bengali Translation</h3>
+            <div class="translation-info">
+                <div class="translation-status">
+                    <span class="status-icon" id="translationStatusIcon">⏳</span>
+                    <span id="translationStatus">Processing...</span>
+                </div>
+                <div>
+                    <span class="language-tag" id="detectedLanguage">Auto</span>
+                    <span> → </span>
+                    <span class="language-tag">Bengali</span>
+                </div>
+                <span id="translationService">Google Translate</span>
+            </div>
+            <div class="bengali-text" id="bengaliText">
+                Loading translation...
+            </div>
+            <button class="copy-btn" onclick="copyText('bengaliText')">Copy Bengali Text</button>
+        </div>
+    </div>
+
+    <script src="app_js_file.js"></script>
+</body>
+</html>
