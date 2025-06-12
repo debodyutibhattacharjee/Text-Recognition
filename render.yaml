@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: ocr-translate-app
+    env: docker
+    repo: https://github.com/debodyutibhattacharjee/Text-Recognition
+    branch: main
+    plan: free
+    autoDeploy: true
