@@ -230,7 +230,7 @@ async function sendToPython() {
 
             console.log(`📤 Sending file ${i + 1}/${uploadedFiles.length}: ${file.name}`);
 
-            const response = await fetch('http://127.0.0.1:5000/upload', {
+            const response = await fetch('https://text-recognition-2.onrender.com/upload', {
                 method: 'POST',
                 body: formData
             });
