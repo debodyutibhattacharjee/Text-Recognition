@@ -11,6 +11,10 @@ import numpy as np
 import sys
 import platform
 from googletrans import Translator
+import time
+
+
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
@@ -28,6 +32,28 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Initialize Google Translator
 translator = Translator()
+
+def clean_old_uploads(folder_path, age_limit_seconds=3600):
+    """Delete files older than given time and log to console"""
+    now = time.time()
+    deleted = 0
+
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if os.path.isfile(file_path):
+            file_age = now - os.path.getmtime(file_path)
+            if file_age > age_limit_seconds:
+                try:
+                    os.remove(file_path)
+                    deleted += 1
+                    print(f"🧹 Deleted old file: {filename}")
+                except Exception as e:
+                    print(f"❌ Could not delete {filename}: {e}")
+    
+    if deleted == 0:
+        print("✅ No old files found to delete.")
+    else:
+        print(f"🧹 Total {deleted} file(s) deleted.")
 
 # Configure Tesseract path based on operating system
 def configure_tesseract():
@@ -185,8 +211,10 @@ def upload_file():
         
         # Save file
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
         
+        file.save(filepath)
+        clean_old_uploads(app.config['UPLOAD_FOLDER'], age_limit_seconds=3600)
+
         # Get basic file info
         file_info = get_file_info(filepath, original_filename)
         
